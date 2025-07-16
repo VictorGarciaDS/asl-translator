@@ -23,6 +23,9 @@ python app.py  # ejecuta el servidor Flask
 
 ## Roadmap
 ✅ Detección de manos
+
 ⬜ Reconocimiento de palabras básicas
+
 ⬜ Traducción inversa (texto → seña)
+
 ⬜ Soporte multilingüe (LSM, ISL...)

@@ -1,5 +1,10 @@
 # tests/test_hand_detection.py
 
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+
 from preprocess.hand_detection import HandDetector
 import cv2
 
