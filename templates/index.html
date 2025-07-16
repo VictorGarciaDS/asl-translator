@@ -1,0 +1,20 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>ASL Translator</title>
+  <style>
+    body { font-family: sans-serif; text-align: center; }
+    img { border: 2px solid black; }
+    p { font-size: 1.5rem; }
+  </style>
+</head>
+<body>
+  <h1>🖐 ASL Translator en Vivo</h1>
+  <div>
+    <img src="{{ url_for('video_feed') }}" width="640" height="480">
+  </div>
+  <p><strong>Texto reconocido:</strong> {{ text }}</p>
+</body>
+</html>

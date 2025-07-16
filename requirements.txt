@@ -5,3 +5,4 @@ torch
 scikit-learn
 numpy
 pytest
+jinja2
