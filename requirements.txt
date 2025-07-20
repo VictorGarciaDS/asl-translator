@@ -1,4 +1,4 @@
-opencv-python
+opencv-python-headless
 mediapipe
 flask
 torch
@@ -6,3 +6,4 @@ scikit-learn
 numpy
 pytest
 jinja2
+streamlit

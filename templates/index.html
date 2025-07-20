@@ -11,10 +11,12 @@
   </style>
 </head>
 <body>
-  <h1>🖐 ASL Translator en Vivo</h1>
-  <div>
-    <img src="{{ url_for('video_feed') }}" width="640" height="480">
-  </div>
-  <p><strong>Texto reconocido:</strong> {{ text }}</p>
+  <h1>Traductor de Señas</h1>
+    <video id="video" width="640" height="480" autoplay></video>
+    <br>
+    <button onclick="captureAndSend()">Detectar Seña</button>
+    <p id="prediction">Esperando captura...</p>
+
+    <script src="/static/script.js"></script>
 </body>
 </html>
