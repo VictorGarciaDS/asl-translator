@@ -98,6 +98,28 @@
         }
       }
       canvasCtx.restore();
+
+      // Enviar al backend
+      sendLandmarksToBackend(results);
+    }
+
+    function sendLandmarksToBackend(results) {
+        const data = {
+            pose: results.poseLandmarks || [],
+            face: results.faceMeshLandmarks || [],
+            hands: results.multiHandLandmarks || []
+        };
+
+        fetch('/predict', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        }).then(response => response.json())
+            .then(result => {
+            console.log('Respuesta del backend:', result);
+            // Aquí puedes mostrar el texto traducido en pantalla, por ejemplo
+            })
+            .catch(error => console.error('Error al enviar al backend:', error));
     }
 
     // Usaremos una cámara común para todos los MPs
