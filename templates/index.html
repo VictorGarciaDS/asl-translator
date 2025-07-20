@@ -1,12 +1,24 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>ASL Translator</title>
+  <title>Cámara en Replit</title>
 </head>
 <body>
-  <h1>Camera Feed</h1>
+  <h1>Vista de cámara</h1>
   <video id="video" width="640" height="480" autoplay></video>
-  <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+  <script>
+    async function startCamera() {
+      const video = document.getElementById('video');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        console.error('Error al acceder a la cámara:', err);
+      }
+    }
+
+    startCamera();
+  </script>
 </body>
 </html>

@@ -1,8 +1,6 @@
 { pkgs }: {
   deps = [
-    pkgs.python310
-    pkgs.python310Packages.pip
-    pkgs.ffmpeg
-    pkgs.libGL
+    pkgs.python312
+    pkgs.python312Packages.flask
   ];
 }
