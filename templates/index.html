@@ -1,24 +1,11 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <title>Cámara en Replit</title>
+  <meta charset="UTF-8" />
+  <title>ASL Landmark Detection</title>
 </head>
 <body>
-  <h1>Vista de cámara</h1>
-  <video id="video" width="640" height="480" autoplay></video>
-
-  <script>
-    async function startCamera() {
-      const video = document.getElementById('video');
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-        video.srcObject = stream;
-      } catch (err) {
-        console.error('Error al acceder a la cámara:', err);
-      }
-    }
-
-    startCamera();
-  </script>
+  <h1>Detección de landmarks de cuerpo completo</h1>
+  <img src="{{ url_for('video_feed') }}" style="width: 80vw;" />
 </body>
 </html>
