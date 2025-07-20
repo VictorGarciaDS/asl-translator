@@ -1,2 +1,5 @@
 flask
 gunicorn
+mediapipe==0.10.0
+opencv-python-headless
+streamlit
