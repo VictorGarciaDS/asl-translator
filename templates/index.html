@@ -1,22 +1,12 @@
-<!-- templates/index.html -->
 <!DOCTYPE html>
-<html lang="es">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>ASL Translator</title>
-  <style>
-    body { font-family: sans-serif; text-align: center; }
-    img { border: 2px solid black; }
-    p { font-size: 1.5rem; }
-  </style>
 </head>
 <body>
-  <h1>Traductor de Señas</h1>
-    <video id="video" width="640" height="480" autoplay></video>
-    <br>
-    <button onclick="captureAndSend()">Detectar Seña</button>
-    <p id="prediction">Esperando captura...</p>
-
-    <script src="/static/script.js"></script>
+  <h1>Camera Feed</h1>
+  <video id="video" width="640" height="480" autoplay></video>
+  <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
 </html>
