@@ -1,0 +1,24 @@
+<!-- public/index.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>ASL Translator</title>
+</head>
+<body>
+  <h1>Vista de cámara (ASL Translator)</h1>
+  <video id="video" width="640" height="480" autoplay></video>
+
+  <script>
+    async function startCamera() {
+      const video = document.getElementById('video');
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        video.srcObject = stream;
+      } catch (err) {
+        console.error('Error al acceder a la cámara:', err);
+      }
+    }
+    startCamera();
+  </script>
+</body>
+</html>
