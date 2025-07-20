@@ -1,7 +1,6 @@
 from flask import Flask, render_template, Response
 import cv2
 import mediapipe as mp
-from capture.camera import get_camera_stream  # O cv2.VideoCapture si no tienes capture.camera
 import os
 
 app = Flask(__name__, template_folder='templates')
@@ -17,7 +16,7 @@ pose = mp_pose.Pose(
     min_tracking_confidence=0.5
 )
 
-camera = get_camera_stream()  # o cv2.VideoCapture(0)
+camera = cv2.VideoCapture(0)  # usa OpenCV directo
 
 def gen_frames():
     while True:
