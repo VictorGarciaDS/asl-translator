@@ -1,8 +1,11 @@
-# render.yaml
 services:
   - type: web
     name: asl-translator
-    env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python app.py"
-    plan: free
+    runtime: python
+    buildCommand: ""
+    startCommand: flask run --host=0.0.0.0 --port=10000
+    envVars:
+      - key: FLASK_APP
+        value: app.py
+      - key: FLASK_ENV
+        value: production
