@@ -3,6 +3,7 @@ import {
   HandLandmarker,
   FaceLandmarker,
   PoseLandmarker,
+  DrawingUtils,
 } from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
 
 const video = document.getElementById("video");
@@ -11,54 +12,35 @@ const ctx = canvas.getContext("2d");
 
 let handLandmarker, faceLandmarker, poseLandmarker;
 
-// --- MANUAL CONNECTIONS ---
+// --- CONEXIONES ENTRE LANDMARKS ---
 const HAND_CONNECTIONS = [
-  [0, 1], [1, 2], [2, 3], [3, 4],       // pulgar
-  [0, 5], [5, 6], [6, 7], [7, 8],       // índice
-  [5, 9], [9, 10], [10, 11], [11, 12],  // medio
-  [9, 13], [13, 14], [14, 15], [15, 16],// anular
-  [13, 17], [17, 18], [18, 19], [19, 20],// meñique
-  [0, 17], [0, 9]                       // palma
+  [0, 1], [1, 2], [2, 3], [3, 4], [0, 5], [5, 6], [6, 7], [7, 8],
+  [5, 9], [9, 10], [10, 11], [11, 12], [9, 13], [13, 14], [14, 15], [15, 16],
+  [13, 17], [17, 18], [18, 19], [19, 20], [0, 17], [0, 9]
 ];
 
+// Solo conexiones hasta los tobillos (landmark 25)
 const POSE_CONNECTIONS = [
-  [0, 1], [1, 2], [2, 3], [3, 7],
-  [0, 4], [4, 5], [5, 6], [6, 8],
-  [9, 10],
-  [11, 12], [11, 13], [13, 15],
-  [12, 14], [14, 16],
-  [15, 17], [16, 18],
+  [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
   [11, 23], [12, 24],
-  [23, 24], [23, 25], [24, 26],
-  [25, 27], [26, 28],
-  [27, 29], [28, 30],
-  [29, 31], [30, 32]
+  [23, 24], [23, 25], [24, 25] // hasta tobillos, no pies
 ];
 
-// FACE_OVAL: solo contorno exterior del rostro
-const FACE_OVAL = [
-  [10, 338], [338, 297], [297, 332], [332, 284], [284, 251], [251, 389], [389, 356],
-  [356, 454], [454, 323], [323, 361], [361, 288], [288, 397], [397, 365],
-  [365, 379], [379, 378], [378, 400], [400, 377], [377, 152], [152, 148],
-  [148, 176], [176, 149], [149, 150], [150, 136], [136, 172], [172, 58],
-  [58, 132], [132, 93], [93, 234], [234, 127], [127, 162], [162, 21],
-  [21, 54], [54, 103], [103, 67], [67, 109], [109, 10]  // cerrar óvalo
-];
-
-// --- DRAW FUNCTIONS ---
+// --- FUNCIONES DE DIBUJO ---
 function drawLandmarks(landmarks, color) {
   if (!landmarks) return;
   ctx.fillStyle = color;
   for (const landmark of landmarks) {
+    if (!landmark) continue;
     ctx.beginPath();
     ctx.arc(landmark.x * canvas.width, landmark.y * canvas.height, 5, 0, 2 * Math.PI);
     ctx.fill();
   }
 }
 
-function drawConnections(landmarks, connections, color) {
+function drawConnections(landmarks, connections) {
   if (!landmarks) return;
-  ctx.strokeStyle = color;
+  ctx.strokeStyle = "white";
   ctx.lineWidth = 2;
   for (const [startIdx, endIdx] of connections) {
     const start = landmarks[startIdx];
@@ -72,7 +54,7 @@ function drawConnections(landmarks, connections, color) {
   }
 }
 
-// --- CAMERA ---
+// --- CONFIGURACIÓN DE LA CÁMARA ---
 async function setupCamera() {
   const stream = await navigator.mediaDevices.getUserMedia({ video: true });
   video.srcObject = stream;
@@ -82,37 +64,31 @@ async function setupCamera() {
   await video.play();
 }
 
-// --- LOAD MODELS ---
+// --- CARGA DE MODELOS DE MEDIAPIPE ---
 async function loadModels() {
   const vision = await FilesetResolver.forVisionTasks(
     "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
   );
 
   handLandmarker = await HandLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath: "/static/models/hand_landmarker.task",
-    },
+    baseOptions: { modelAssetPath: "/static/models/hand_landmarker.task" },
     runningMode: "VIDEO",
     numHands: 2,
   });
 
   faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath: "/static/models/face_landmarker.task",
-    },
+    baseOptions: { modelAssetPath: "/static/models/face_landmarker.task" },
     outputFaceBlendshapes: false,
     runningMode: "VIDEO",
   });
 
   poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-    baseOptions: {
-      modelAssetPath: "/static/models/pose_landmarker_lite.task",
-    },
+    baseOptions: { modelAssetPath: "/static/models/pose_landmarker_lite.task" },
     runningMode: "VIDEO",
   });
 }
 
-// --- MAIN LOOP ---
+// --- LOOP PRINCIPAL DE PREDICCIÓN ---
 async function predictFrame() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -124,26 +100,57 @@ async function predictFrame() {
     const faceResult = await faceLandmarker.detectForVideo(video, now);
     const poseResult = await poseLandmarker.detectForVideo(video, now);
 
-    if (handResult.landmarks) {
-      for (const hand of handResult.landmarks) {
-        drawConnections(hand, HAND_CONNECTIONS, "red");
-        drawLandmarks(hand, "red");
+    let poseLandmarks = poseResult.landmarks?.[0] || [];
+    let hands = handResult.landmarks || [];
+
+    // --- FILTRAR LANDMARKS DE LA CARA Y MANOS EN POSE ---
+    const ignoredPosePoints = new Set([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
+      15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
+    ]);
+
+    // --- TAMBIÉN ELIMINAR PUNTOS DESPUÉS DE LA CADERA (solo hasta 25) ---
+    const cleanPose = poseLandmarks.map((p, i) =>
+      (ignoredPosePoints.has(i) || i > 25) ? null : p
+    );
+
+    // --- DIBUJAR POSE ---
+    drawConnections(cleanPose, POSE_CONNECTIONS);
+    drawLandmarks(cleanPose, "blue");
+
+    // --- DIBUJAR MANOS ---
+    for (const hand of hands) {
+      drawConnections(hand, HAND_CONNECTIONS);
+      drawLandmarks(hand, "red");
+    }
+
+    // --- DIBUJAR CARA (solo landmarks de faceLandmarker, no de pose) ---
+    for (const face of faceResult.faceLandmarks || []) {
+      drawLandmarks(face, "green");
+    }
+
+    // --- CONECTAR CODOS A PALMAS (heurística por cercanía) ---
+    const codoIzq = poseLandmarks[13];
+    const codoDer = poseLandmarks[14];
+
+    for (const hand of hands) {
+      const palma = hand[0];
+      if (codoIzq && codoDer && palma) {
+        const distIzq = Math.hypot(palma.x - codoIzq.x, palma.y - codoIzq.y);
+        const distDer = Math.hypot(palma.x - codoDer.x, palma.y - codoDer.y);
+        const cercaIzq = distIzq < distDer;
+
+        ctx.strokeStyle = "white";
+        ctx.beginPath();
+        ctx.moveTo(
+          (cercaIzq ? codoIzq.x : codoDer.x) * canvas.width,
+          (cercaIzq ? codoIzq.y : codoDer.y) * canvas.height
+        );
+        ctx.lineTo(palma.x * canvas.width, palma.y * canvas.height);
+        ctx.stroke();
       }
     }
 
-    if (faceResult.faceLandmarks) {
-      for (const face of faceResult.faceLandmarks) {
-        drawConnections(face, FACE_OVAL, "green");
-        drawLandmarks(face, "green");
-      }
-    }
-
-    if (poseResult.landmarks) {
-      for (const pose of poseResult.landmarks) {
-        drawConnections(pose, POSE_CONNECTIONS, "blue");
-        drawLandmarks(pose, "blue");
-      }
-    }
   } catch (err) {
     console.error("Error en inferencia:", err.message);
   }
@@ -151,7 +158,7 @@ async function predictFrame() {
   requestAnimationFrame(predictFrame);
 }
 
-// --- INIT ---
+// --- INICIAR TODO ---
 (async () => {
   try {
     await setupCamera();
