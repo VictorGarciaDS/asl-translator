@@ -21,8 +21,11 @@ const HAND_CONNECTIONS = [
 
 const POSE_CONNECTIONS = [
   [11, 12], [11, 13], [13, 15], [12, 14], [14, 16],
-  [11, 23], [12, 24],
-  [23, 24], [23, 25], [24, 25]
+  [11, 23], [12, 24], [23, 24]
+];
+
+const FOREHEAD_CONNECTIONS = [
+  [67, 109], [109, 10], [10, 338], [338, 297], [297, 299], [299,9], [9, 69], [69, 67]
 ];
 
 const EYEBROWS_CONNECTIONS = [
@@ -42,6 +45,11 @@ const IRIS_CONNECTIONS = [
   [474, 475], [475, 476], [476, 477], [477, 474] // Iris izquierdo
 ];
 
+const TEMPLES_CONNECTIONS = [
+  [162, 21], [21, 71], [71, 156], [156, 143], [143, 34], [34, 162],// Sien derecha
+  [389, 251], [251, 301], [301, 383], [383, 372], [372, 264], [264, 389] // Sien izquierda
+];
+
 const NOSE_CONNECTIONS = [
   [6, 197], [197, 195], [195, 5], [5, 4], //eje del tabique
   [4, 275], [275, 440], [440, 344], [344, 331],//eje transversal derecho de la nariz
@@ -58,6 +66,11 @@ const LIPS_CONNECTIONS = [
   [415, 308], [310, 415], [311, 310], [312, 311], [13, 312], [82, 13], [81, 82], [80, 81], [191, 80], [78, 191],// Contorno interior de los labios
   [16, 315], [315, 404], [404, 320], [320, 307], [307, 306], [306, 408], [408, 304], [304, 303], [303, 302],
   [302, 11], [11, 72], [72, 73], [73, 74], [74, 184], [184, 76], [76, 77], [77, 90], [90, 180], [180, 85], [85, 16] //Contorno intermedio de los labios
+];
+
+const CHECKS_CONNECTIONS = [
+  [147, 187], [187, 207], [207, 214], [214, 135], [135, 138], [138, 215], [215, 177], [177, 147],// Mejilla derecha
+  [376, 411], [411, 427], [427, 434], [434, 364], [364, 367], [367, 435], [435, 401], [401, 376] // Mejilla izquierda
 ];
 
 const CHIN_CONNECTIONS = [
@@ -142,13 +155,56 @@ async function predictFrame() {
     const poseLandmarks = poseResult.landmarks?.[0] || [];
     const hands = handResult.landmarks || [];
 
+    // --- PUNTO DE LA TRÁQUEA (entre mentón y cuello) ---
+        // --- PUNTOS DEL CUELLO (área aproximada de la tráquea) ---
+    if (poseLandmarks.length > 0 && faceResult.faceLandmarks?.length > 0) {
+      const pose = poseLandmarks;
+      const face = faceResult.faceLandmarks[0]; // primera cara detectada
+
+      // Punto base del mentón
+      const menton = {
+        x: (face[148].x + face[377].x) / 2,
+        y: (face[148].y + face[377].y) / 2,
+        z: (face[148].z + face[377].z) / 2,
+      };
+
+      // Punto base de cuello medio (entre hombros)
+      const baseCuello = {
+        x: (pose[11].x + pose[12].x) / 2,
+        y: (pose[11].y + pose[12].y) / 2,
+        z: (pose[11].z + pose[12].z) / 2,
+      };
+
+      // Tráquea: un punto 2/3 hacia abajo entre mentón y base del cuello
+      const traquea = {
+        x: (2 * baseCuello.x + menton.x) / 3,
+        y: (2 * baseCuello.y + menton.y) / 3,
+        z: (2 * baseCuello.z + menton.z) / 3,
+      };
+
+      // Puntos izquierdo y derecho del cuello (ligeramente desplazados desde la base)
+      const cuelloIzq = {
+        x: (2 * pose[11].x + menton.x) / 3,
+        y: (2 * pose[11].y + menton.y) / 3,
+        z: (2 * pose[11].z + menton.z) / 3,
+      };
+
+      const cuelloDer = {
+        x: (2 * pose[12].x + menton.x) / 3,
+        y: (2 * pose[12].y + menton.y) / 3,
+        z: (2 * pose[12].z + menton.z) / 3,
+      };
+
+      drawLandmarks([traquea, cuelloIzq, cuelloDer], "blue");
+    }
+
     // --- FILTRAR LANDMARKS DE LA POSE ---
     const ignoredPosePoints = new Set([
       0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
       15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
     ]);
     const cleanPose = poseLandmarks.map((p, i) =>
-      (ignoredPosePoints.has(i) || i > 25) ? null : p
+      (ignoredPosePoints.has(i) || i > 24) ? null : p
     );
 
     // --- DIBUJAR POSE ---
@@ -163,6 +219,10 @@ async function predictFrame() {
 
     // --- LANDMARKS FACIALES (REGIONES) ---
     for (const face of faceResult.faceLandmarks || []) {
+      const forehead = [
+        face[67], face[109], face[10], face[338], face[297],
+        face[299], face[9], face[69]
+      ];
       const cejas = [
         // Ceja derecha
         face[46], face[53], face[52], face[65], face[55],
@@ -183,7 +243,11 @@ async function predictFrame() {
       ];
       const iris = [
         ...face.slice(469, 472), // Iris derecho
-        ...face.slice(474, 477)  // Iris izquierdo
+        ...face.slice(474, 477)  // Iris izquierda
+      ];
+      const temples = [
+        face[162], face[21], face[71], face[156], face[143], face[34],// Sien derecha
+        face[389], face[251], face[301], face[383], face[372], face[264] // Sien izqierda
       ];
       const nariz = [
         face[6], face[197], face[195], face[5], face[4], face[2],//eje del tabique
@@ -208,23 +272,35 @@ async function predictFrame() {
         face[11], face[72], face[73], face[74], face[184],
         face[76], face[77], face[90], face[180], face[85]
       ];
+      const mejillas = [
+        face[147], face[187], face[207], face[214], face[135],
+        face[138], face[215], face[177], // Mejilla derecha
+        face[376], face[411], face[427], face[434], face[364],
+        face[367], face[435], face[401] //Meji;lla izquierda
+      ];
       const menton = [
         face[32], face[194], face[83], face[18], face[313],
         face[418], face[262], face[369], face[377], face[152],
         face[148], face[140]
       ];
 
-      drawLandmarks(cejas, "#cc00ff");  // púrpura
+      drawLandmarks(forehead, "green");
+      drawConnections(face, FOREHEAD_CONNECTIONS);
+      drawLandmarks(cejas, "green");
       drawConnections(face, EYEBROWS_CONNECTIONS);
-      drawLandmarks(ojos, "#00ffff");   // cian
+      drawLandmarks(ojos, "green");
       drawConnections(face, EYES_CONNECTIONS);
-      drawLandmarks(nariz, "#ffcc00");  // amarillo
+      drawLandmarks(temples, "green");
+      drawConnections(face, TEMPLES_CONNECTIONS);
+      drawLandmarks(nariz, "green");
       drawConnections(face, NOSE_CONNECTIONS);
-      drawLandmarks(boca, "#ff6600");   // naranja
+      drawLandmarks(boca, "green");
       drawConnections(face, LIPS_CONNECTIONS);
-      drawLandmarks(menton, "#00ff00"); // verde
+      drawLandmarks(mejillas, "green");
+      drawConnections(face, CHECKS_CONNECTIONS);
+      drawLandmarks(menton, "green");
       drawConnections(face, CHIN_CONNECTIONS);
-      drawLandmarks(iris, "#0000ff"); // azul fuerte
+      drawLandmarks(iris, "green");
       drawConnections(face, IRIS_CONNECTIONS);
     }
 
