@@ -155,47 +155,74 @@ async function predictFrame() {
     const poseLandmarks = poseResult.landmarks?.[0] || [];
     const hands = handResult.landmarks || [];
 
-    // --- PUNTO DE LA TRÁQUEA (entre mentón y cuello) ---
-        // --- PUNTOS DEL CUELLO (área aproximada de la tráquea) ---
+    // --- PUNTOS DE LA TRÁQUEA (entre mentón y cuello) ---
     if (poseLandmarks.length > 0 && faceResult.faceLandmarks?.length > 0) {
       const pose = poseLandmarks;
       const face = faceResult.faceLandmarks[0]; // primera cara detectada
 
-      // Punto base del mentón
-      const menton = {
-        x: (face[148].x + face[377].x) / 2,
-        y: (face[148].y + face[377].y) / 2,
-        z: (face[148].z + face[377].z) / 2,
-      };
+      const menton = face[152];
 
-      // Punto base de cuello medio (entre hombros)
       const baseCuello = {
         x: (pose[11].x + pose[12].x) / 2,
         y: (pose[11].y + pose[12].y) / 2,
         z: (pose[11].z + pose[12].z) / 2,
       };
 
-      // Tráquea: un punto 2/3 hacia abajo entre mentón y base del cuello
-      const traquea = {
+      // Tráquea: 1/3 y 2/3 hacia abajo
+      const traquea1 = {
+        x: (baseCuello.x + 2 * menton.x) / 3,
+        y: (baseCuello.y + 2 * menton.y) / 3,
+        z: (baseCuello.z + 2 * menton.z) / 3,
+      };
+
+      const traquea2 = {
         x: (2 * baseCuello.x + menton.x) / 3,
         y: (2 * baseCuello.y + menton.y) / 3,
         z: (2 * baseCuello.z + menton.z) / 3,
       };
 
-      // Puntos izquierdo y derecho del cuello (ligeramente desplazados desde la base)
-      const cuelloIzq = {
-        x: (2 * pose[11].x + menton.x) / 3,
-        y: (2 * pose[11].y + menton.y) / 3,
-        z: (2 * pose[11].z + menton.z) / 3,
+      // ----- Punto paralelo a 148 y 377 alrededor de traquea1 -----
+      const offset_face = Math.hypot(face[377].x - face[148].x, face[377].y - face[148].y);
+      const dir_face = {
+        x: (face[377].x - face[148].x) / offset_face,
+        y: (face[377].y - face[148].y) / offset_face,
       };
 
-      const cuelloDer = {
-        x: (2 * pose[12].x + menton.x) / 3,
-        y: (2 * pose[12].y + menton.y) / 3,
-        z: (2 * pose[12].z + menton.z) / 3,
+      const traquea1_izq = {
+        x: traquea1.x - dir_face.x * offset_face / 2,
+        y: traquea1.y - dir_face.y * offset_face / 2,
+        z: traquea1.z,
       };
 
-      drawLandmarks([traquea, cuelloIzq, cuelloDer], "blue");
+      const traquea1_der = {
+        x: traquea1.x + dir_face.x * offset_face / 2,
+        y: traquea1.y + dir_face.y * offset_face / 2,
+        z: traquea1.z,
+      };
+
+      // ----- Punto paralelo a 11 y 12 alrededor de baseCuello -----
+      const offset_pose = Math.hypot(pose[12].x -pose[11].x, pose[12].y - pose[11].y);
+      const dir_pose = {
+        x: (pose[11].x - pose[12].x) / offset_pose,
+        y: (pose[11].y - pose[12].y) / offset_pose,
+      }
+
+      const baseCuello_izq = {
+        x: baseCuello.x - dir_pose.x * offset_pose /20,
+        y: baseCuello.y - dir_pose.y * offset_pose /20,
+        z: baseCuello.z,
+      }
+
+      const baseCuello_der = {
+        x: baseCuello.x + dir_pose.x * offset_pose /20,
+        y: baseCuello.y + dir_pose.y * offset_pose /20,
+        z: baseCuello.z,
+      }
+
+      drawLandmarks(
+        [traquea2, traquea1_izq, traquea1_der, baseCuello_izq, baseCuello_der],
+        "blue"
+      );
     }
 
     // --- FILTRAR LANDMARKS DE LA POSE ---
