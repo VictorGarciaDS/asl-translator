@@ -1,0 +1,17 @@
+body {
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Oculta el video fuente completamente */
+video {
+  display: none;
+}
+
+/* Canvas encima de todo y posicionado igual que el video */
+video,
+canvas {
+  position: absolute;
+  left: 0;
+  top: 0;
+}

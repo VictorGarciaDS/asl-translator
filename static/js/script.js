@@ -10,6 +10,16 @@ const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
+// Ajusta tamaño al inicializar
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+
+// Opcional: vuelve a ajustar si el usuario gira la pantalla o cambia tamaño
+window.addEventListener("resize", resizeCanvas);
+
 let handLandmarker, faceLandmarker, poseLandmarker;
 
 // --- CONEXIONES ENTRE LANDMARKS ---
@@ -219,10 +229,64 @@ async function predictFrame() {
         z: baseCuello.z,
       }
 
+      // ----- Dirección bisectriz entre cara y hombros -----
+      const dir_bisectriz_raw = {
+        x: dir_face.x + dir_pose.x,
+        y: dir_face.y + dir_pose.y,
+      };
+
+      const norm_bisectriz = Math.hypot(dir_bisectriz_raw.x, dir_bisectriz_raw.y);
+      const dir_bisectriz = {
+        x: dir_bisectriz_raw.x / norm_bisectriz,
+        y: dir_bisectriz_raw.y / norm_bisectriz,
+      };
+
+      // Distancia arbitraria (puedes ajustar el divisor)
+      const offset_bisectriz = (offset_face + offset_pose) / 20;
+
+      const traquea2_izq = {
+        x: traquea2.x - dir_bisectriz.x * offset_bisectriz,
+        y: traquea2.y - dir_bisectriz.y * offset_bisectriz,
+        z: traquea2.z,
+      };
+
+      const traquea2_der = {
+        x: traquea2.x + dir_bisectriz.x * offset_bisectriz,
+        y: traquea2.y + dir_bisectriz.y * offset_bisectriz,
+        z: traquea2.z,
+      };
+
       drawLandmarks(
-        [traquea2, traquea1_izq, traquea1_der, baseCuello_izq, baseCuello_der],
+        [traquea2_izq,
+          traquea2_der,
+          traquea1_izq,
+          traquea1_der,
+          baseCuello_izq,
+          baseCuello_der
+        ],
         "blue"
       );
+
+      const NECK_POINTS = [
+        face[377],          // 0
+        traquea1_der,       // 1
+        traquea2_der,       // 2
+        baseCuello_der,     // 3
+        baseCuello_izq,     // 4
+        traquea2_izq,       // 5
+        traquea1_izq,       // 6
+        face[148],          // 7
+      ];
+
+      // Define conexiones por índice en NECK_POINTS
+      const NECK_CONNECTIONS = [
+        [0, 1], [1, 2], [2, 3],
+        [3, 4], [4, 5], [5, 6],
+        [6, 7]
+      ];
+
+      // Dibuja
+      drawConnections(NECK_POINTS, NECK_CONNECTIONS);
     }
 
     // --- FILTRAR LANDMARKS DE LA POSE ---
