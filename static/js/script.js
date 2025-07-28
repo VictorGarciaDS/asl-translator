@@ -17,6 +17,9 @@ function resizeCanvas() {
 }
 resizeCanvas();
 
+let frameCounter = 0;
+const FRAMES_PARA_ENVIAR = 10; // Envía cada 10 frames
+
 // Opcional: vuelve a ajustar si el usuario gira la pantalla o cambia tamaño
 window.addEventListener("resize", resizeCanvas);
 
@@ -88,6 +91,21 @@ const CHIN_CONNECTIONS = [
   [418, 262], [262, 369], [369, 377], [377, 152], [152, 148], [148, 140], [140, 32]
 ];
 
+let forehead = [];
+let cejas = [];
+let ojos = [];
+let iris = [];
+let temples = [];
+let nariz = [];
+let boca = [];
+let mejillas = [];
+let menton = [];
+
+let NECK_POINTS = [];
+
+let ignoredPosePoints = new Set([]);
+let cleanPose = [];
+
 // --- FUNCIONES DE DIBUJO ---
 function drawLandmarks(landmarks, color) {
   if (!landmarks) return;
@@ -150,21 +168,31 @@ async function loadModels() {
   });
 }
 
+// --- función para enviar los datos ---
+function enviarLandmarksAlServidor(data) {
+  fetch("/api/landmarks", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  }).catch((err) => console.error("❌ Error al enviar landmarks:", err));
+}
+
 // --- LOOP PRINCIPAL DE PREDICCIÓN ---
 async function predictFrame() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   const now = performance.now();
+  const handResult = await handLandmarker.detectForVideo(video, now);
+  const faceResult = await faceLandmarker.detectForVideo(video, now);
+  const poseResult = await poseLandmarker.detectForVideo(video, now);
+
+  const poseLandmarks = poseResult.landmarks?.[0] || [];
+  const hands = handResult.landmarks || [];
 
   try {
-    const handResult = await handLandmarker.detectForVideo(video, now);
-    const faceResult = await faceLandmarker.detectForVideo(video, now);
-    const poseResult = await poseLandmarker.detectForVideo(video, now);
-
-    const poseLandmarks = poseResult.landmarks?.[0] || [];
-    const hands = handResult.landmarks || [];
-
     // --- PUNTOS DE LA TRÁQUEA (entre mentón y cuello) ---
     if (poseLandmarks.length > 0 && faceResult.faceLandmarks?.length > 0) {
       const pose = poseLandmarks;
@@ -267,7 +295,7 @@ async function predictFrame() {
         "blue"
       );
 
-      const NECK_POINTS = [
+      NECK_POINTS = [
         face[377],          // 0
         traquea1_der,       // 1
         traquea2_der,       // 2
@@ -294,7 +322,7 @@ async function predictFrame() {
       0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
       15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
     ]);
-    const cleanPose = poseLandmarks.map((p, i) =>
+    cleanPose = poseLandmarks.map((p, i) =>
       (ignoredPosePoints.has(i) || i > 24) ? null : p
     );
 
@@ -310,11 +338,11 @@ async function predictFrame() {
 
     // --- LANDMARKS FACIALES (REGIONES) ---
     for (const face of faceResult.faceLandmarks || []) {
-      const forehead = [
+      forehead = [
         face[67], face[109], face[10], face[338], face[297],
         face[299], face[9], face[69]
       ];
-      const cejas = [
+      cejas = [
         // Ceja derecha
         face[46], face[53], face[52], face[65], face[55],
         face[70], face[63], face[105], face[66], face[107],
@@ -322,7 +350,7 @@ async function predictFrame() {
         face[276], face[283], face[282], face[295], face[285],
         face[300], face[293], face[334], face[296], face[336]
       ];
-      const ojos = [
+      ojos = [
         // Ojo derecho
         face[33], face[7], face[163], face[144], face[145],
         face[153], face[154], face[155], face[133], face[246],
@@ -332,15 +360,15 @@ async function predictFrame() {
         face[380], face[381], face[382], face[362], face[466],
         face[388], face[387], face[386], face[385], face[384], face[398]
       ];
-      const iris = [
+      iris = [
         ...face.slice(469, 472), // Iris derecho
         ...face.slice(474, 477)  // Iris izquierda
       ];
-      const temples = [
+      temples = [
         face[162], face[21], face[71], face[156], face[143], face[34],// Sien derecha
         face[389], face[251], face[301], face[383], face[372], face[264] // Sien izqierda
       ];
-      const nariz = [
+      nariz = [
         face[6], face[197], face[195], face[5], face[4], face[2],//eje del tabique
         face[102], face[115], face[220], face[45], face[275],
         face[440], face[344], face[331],// eje transversal de la nariz
@@ -349,7 +377,7 @@ async function predictFrame() {
         face[122], face[351], face[412], face[343], face[437],
         face[355], face[371], face[358]
       ];
-      const boca = [
+      boca = [
         face[61], face[146], face[91], face[181], face[84],
         face[17], face[314], face[405], face[321], face[375],
         face[291], face[185], face[40], face[39], face[37],
@@ -363,13 +391,13 @@ async function predictFrame() {
         face[11], face[72], face[73], face[74], face[184],
         face[76], face[77], face[90], face[180], face[85]
       ];
-      const mejillas = [
+      mejillas = [
         face[147], face[187], face[207], face[214], face[135],
         face[138], face[215], face[177], // Mejilla derecha
         face[376], face[411], face[427], face[434], face[364],
         face[367], face[435], face[401] //Meji;lla izquierda
       ];
-      const menton = [
+      menton = [
         face[32], face[194], face[83], face[18], face[313],
         face[418], face[262], face[369], face[377], face[152],
         face[148], face[140]
@@ -421,8 +449,40 @@ async function predictFrame() {
     console.error("Error en inferencia:", err.message);
   }
 
+  frameCounter++;
+  if (frameCounter % FRAMES_PARA_ENVIAR === 0) {
+    const faceLandmarks = faceResult.faceLandmarks?.[0] || null;
+
+    ignoredPosePoints = new Set([
+      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
+      15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
+    ]);
+
+    cleanPose = poseLandmarks
+      .map((p, i) => ({ index: i, point: p })) // mantener índice original por si lo necesitas
+      .filter(({ index }) => !ignoredPosePoints.has(index) && index <= 24)
+      .map(({ point }) => point); // solo devolver los puntos válidos
+
+    enviarLandmarksAlServidor({
+      timestamp: Date.now(),
+      forehead: forehead,
+      cejas: cejas,
+      ojos: ojos,
+      iris: iris,
+      temples: temples,
+      nariz: nariz,
+      boca: boca,
+      mejillas: mejillas,
+      menton: menton,
+      pose: cleanPose,
+      hands: hands,
+      neck: NECK_POINTS,
+    });
+  }
+
   requestAnimationFrame(predictFrame);
 }
+
 
 // --- INICIAR TODO ---
 (async () => {
