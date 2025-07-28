@@ -18,7 +18,7 @@ function resizeCanvas() {
 resizeCanvas();
 
 let frameCounter = 0;
-const FRAMES_PARA_ENVIAR = 10; // Envía cada 10 frames
+const FRAMES_PARA_ENVIAR = 1; // Envía cada 10 frames
 
 // Opcional: vuelve a ajustar si el usuario gira la pantalla o cambia tamaño
 window.addEventListener("resize", resizeCanvas);
@@ -43,6 +43,10 @@ const FOREHEAD_CONNECTIONS = [
 
 const EYEBROWS_CONNECTIONS = [
   [46, 53], [53, 52], [52, 65], [65, 55], [55, 107], [66, 107], [105, 66], [63, 105], [70, 63], [46, 70],// Ceja derecha
+  [276, 283], [283, 282], [282, 295], [295, 285], [285, 336], [336, 296], [334, 296], [293, 334], [300, 293], [300, 276]// Ceja izquierda
+];
+
+const LEFT_EYEBROW_CONNECTIONS = [
   [276, 283], [283, 282], [282, 295], [295, 285], [285, 336], [336, 296], [334, 296], [293, 334], [300, 293], [300, 276]// Ceja izquierda
 ];
 
@@ -92,7 +96,8 @@ const CHIN_CONNECTIONS = [
 ];
 
 let forehead = [];
-let cejas = [];
+let ceja_izquierda = [];
+let ceja_derecha = [];
 let ojos = [];
 let iris = [];
 let temples = [];
@@ -342,11 +347,11 @@ async function predictFrame() {
         face[67], face[109], face[10], face[338], face[297],
         face[299], face[9], face[69]
       ];
-      cejas = [
-        // Ceja derecha
+      ceja_derecha = [
         face[46], face[53], face[52], face[65], face[55],
-        face[70], face[63], face[105], face[66], face[107],
-        // Ceja izquierda
+        face[70], face[63], face[105], face[66], face[107]
+      ];
+      ceja_izquierda = [
         face[276], face[283], face[282], face[295], face[285],
         face[300], face[293], face[334], face[296], face[336]
       ];
@@ -405,8 +410,8 @@ async function predictFrame() {
 
       drawLandmarks(forehead, "green");
       drawConnections(face, FOREHEAD_CONNECTIONS);
-      drawLandmarks(cejas, "green");
-      drawConnections(face, EYEBROWS_CONNECTIONS);
+      drawLandmarks(ceja_izquierda, "green");
+      drawConnections(face, LEFT_EYEBROW_CONNECTIONS);
       drawLandmarks(ojos, "green");
       drawConnections(face, EYES_CONNECTIONS);
       drawLandmarks(temples, "green");
@@ -466,7 +471,7 @@ async function predictFrame() {
     enviarLandmarksAlServidor({
       timestamp: Date.now(),
       forehead: forehead,
-      cejas: cejas,
+      left_eyebrow: ceja_izquierda,
       ojos: ojos,
       iris: iris,
       temples: temples,

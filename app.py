@@ -21,7 +21,7 @@ def recibir_landmarks():
     print("Timestamp:", data.get("timestamp"))
     '''
     print("Frente landmarks:", data.get("forehead"))
-    print("Cejas landmarks:", data.get("cejas"))
+    print("Ceja izquierda landmarks:", data.get("left_eyebrow"))
     print("Ojos landmarks:", data.get("ojos"))
     print("Iris landmarks:", data.get("iris"))
     print("Sienes landmarks:", data.get("temples"))
