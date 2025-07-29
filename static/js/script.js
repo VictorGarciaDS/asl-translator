@@ -18,7 +18,7 @@ function resizeCanvas() {
 resizeCanvas();
 
 let frameCounter = 0;
-const FRAMES_PARA_ENVIAR = 1; // Envía cada 10 frames
+const FRAMES_PARA_ENVIAR = 10; // Envía cada 10 frames
 
 // Opcional: vuelve a ajustar si el usuario gira la pantalla o cambia tamaño
 window.addEventListener("resize", resizeCanvas);
@@ -41,39 +41,57 @@ const FOREHEAD_CONNECTIONS = [
   [67, 109], [109, 10], [10, 338], [338, 297], [297, 299], [299,9], [9, 69], [69, 67]
 ];
 
-const EYEBROWS_CONNECTIONS = [
-  [46, 53], [53, 52], [52, 65], [65, 55], [55, 107], [66, 107], [105, 66], [63, 105], [70, 63], [46, 70],// Ceja derecha
-  [276, 283], [283, 282], [282, 295], [295, 285], [285, 336], [336, 296], [334, 296], [293, 334], [300, 293], [300, 276]// Ceja izquierda
-];
-
 const LEFT_EYEBROW_CONNECTIONS = [
   [276, 283], [283, 282], [282, 295], [295, 285], [285, 336], [336, 296], [334, 296], [293, 334], [300, 293], [300, 276]// Ceja izquierda
 ];
 
-const EYES_CONNECTIONS = [
-  [33, 7], [7, 163], [163, 144], [144, 145], [145, 153], [153, 154], [154, 155], [155, 133], [173, 133],
-  [157, 173], [158, 157], [159, 158], [160, 159], [161, 160], [246, 161], [33, 246],// Ojo derecho
+const RIGHT_EYEBROW_CONNECTIONS = [
+  [46, 53], [53, 52], [52, 65], [65, 55], [55, 107], [66, 107], [105, 66], [63, 105], [70, 63], [46, 70]// Ceja derecha
+];
+
+const LEFT_EYE_CONNECTIONS = [
   [263, 249], [249, 390], [390, 373], [373, 374], [374, 380], [380, 381], [381, 382], [382, 362],
   [263, 466], [466, 388], [388, 387], [387, 386], [386, 385], [385, 384], [384, 398], [398, 362]
 ];
 
-const IRIS_CONNECTIONS = [
-  [469, 470], [470, 471], [471, 472], [472, 469], // Iris derecho
-  [474, 475], [475, 476], [476, 477], [477, 474] // Iris izquierdo
+const RIGHT_EYE_CONNECTIONS = [
+  [33, 7], [7, 163], [163, 144], [144, 145], [145, 153], [153, 154], [154, 155], [155, 133], [173, 133],
+  [157, 173], [158, 157], [159, 158], [160, 159], [161, 160], [246, 161], [33, 246]
 ];
 
-const TEMPLES_CONNECTIONS = [
-  [162, 21], [21, 71], [71, 156], [156, 143], [143, 34], [34, 162],// Sien derecha
-  [389, 251], [251, 301], [301, 383], [383, 372], [372, 264], [264, 389] // Sien izquierda
+const LEFT_IRIS_CONNECTIONS = [
+  [474, 475], [475, 476], [476, 477], [477, 474]
 ];
 
-const NOSE_CONNECTIONS = [
+const RIGHT_IRIS_CONNECTIONS = [
+  [469, 470], [470, 471], [471, 472], [472, 469]
+];
+
+const LEFT_TEMPLE_CONNECTIONS = [
+  [389, 251], [251, 301], [301, 383], [383, 372], [372, 264], [264, 389]
+];
+
+const RIGHT_TEMPLE_CONNECTIONS = [
+  [162, 21], [21, 71], [71, 156], [156, 143], [143, 34], [34, 162]
+];
+
+const LEFT_NOSE = [
+  [6, 197], [197, 195], [195, 5], [5, 4], //eje del tabique
+  [6, 122], [122, 188], [188 ,114], [114, 217], [126, 217], [126, 142], [142, 129], [129, 102], //lateral izquierdo de la nariz
+  [102, 115], [115, 220], [220, 45], [45, 4]//eje transversal izquierdo de la nariz
+];
+
+const RIGHT_NOSE = [
   [6, 197], [197, 195], [195, 5], [5, 4], //eje del tabique
   [4, 275], [275, 440], [440, 344], [344, 331],//eje transversal derecho de la nariz
   [331, 358], [358, 371], [371, 355], [355, 437], [437, 343], [343, 412], [412, 351], [351, 6], //lateral derecho de la nariz
-  [6, 122], [122, 188], [188 ,114], [114, 217], [126, 217], [126, 142], [142, 129], [129, 102], //lateral izquierdo de la nariz
+];
+
+const LOW_NOSE = [
   [102, 115], [115, 220], [220, 45], [45, 4],//eje transversal izquierdo de la nariz
-  [129, 98], [98, 97], [97, 2], [2, 326], [326, 327], [327, 358]// base de la nariz
+  [4, 275], [275, 440], [440, 344], [344, 331],//eje transversal derecho de la nariz
+  [102, 129], [129, 98], [98, 97], [97, 2], [2, 326],
+  [326, 327], [327, 358], [358, 331]// base de la nariz
 ];
 
 const LIPS_CONNECTIONS = [
@@ -85,9 +103,12 @@ const LIPS_CONNECTIONS = [
   [302, 11], [11, 72], [72, 73], [73, 74], [74, 184], [184, 76], [76, 77], [77, 90], [90, 180], [180, 85], [85, 16] //Contorno intermedio de los labios
 ];
 
-const CHECKS_CONNECTIONS = [
-  [147, 187], [187, 207], [207, 214], [214, 135], [135, 138], [138, 215], [215, 177], [177, 147],// Mejilla derecha
-  [376, 411], [411, 427], [427, 434], [434, 364], [364, 367], [367, 435], [435, 401], [401, 376] // Mejilla izquierda
+const LEFT_CHEEK_CONNECTIONS = [
+  [376, 411], [411, 427], [427, 434], [434, 364], [364, 367], [367, 435], [435, 401], [401, 376]
+];
+
+const RIGHT_CHEEK_CONNECTIONS = [
+  [147, 187], [187, 207], [207, 214], [214, 135], [135, 138], [138, 215], [215, 177], [177, 147]
 ];
 
 const CHIN_CONNECTIONS = [
@@ -98,16 +119,20 @@ const CHIN_CONNECTIONS = [
 let forehead = [];
 let ceja_izquierda = [];
 let ceja_derecha = [];
-let ojos = [];
-let iris = [];
-let temples = [];
-let nariz = [];
+let sien_izquierda = [];
+let sien_derecha = [];
+let ojo_izquierdo = [];
+let ojo_derecho = [];
+let iris_izquierdo = [];
+let iris_derecho = [];
+let nariz_izquierda = [];
+let nariz_derecha = [];
+let nariz_baja = [];
+let mejilla_izquierda = [];
+let mejilla_derecha = [];
 let boca = [];
-let mejillas = [];
 let menton = [];
-
 let NECK_POINTS = [];
-
 let ignoredPosePoints = new Set([]);
 let cleanPose = [];
 
@@ -347,40 +372,62 @@ async function predictFrame() {
         face[67], face[109], face[10], face[338], face[297],
         face[299], face[9], face[69]
       ];
-      ceja_derecha = [
-        face[46], face[53], face[52], face[65], face[55],
-        face[70], face[63], face[105], face[66], face[107]
-      ];
       ceja_izquierda = [
         face[276], face[283], face[282], face[295], face[285],
         face[300], face[293], face[334], face[296], face[336]
       ];
-      ojos = [
-        // Ojo derecho
-        face[33], face[7], face[163], face[144], face[145],
-        face[153], face[154], face[155], face[133], face[246],
-        face[161], face[160], face[159], face[158], face[157], face[173],
-        // Ojo izquierdo
+      ceja_derecha = [
+        face[46], face[53], face[52], face[65], face[55],
+        face[70], face[63], face[105], face[66], face[107]
+      ];
+      sien_izquierda = [
+        face[389], face[251], face[301], face[383], face[372], face[264]
+      ];
+      sien_derecha = [
+        face[162], face[21], face[71], face[156], face[143], face[34]
+      ];
+      ojo_izquierdo = [
         face[263], face[249], face[390], face[373], face[374],
         face[380], face[381], face[382], face[362], face[466],
-        face[388], face[387], face[386], face[385], face[384], face[398]
+        face[388], face[387], face[386], face[385], face[384],
+        face[398]
       ];
-      iris = [
-        ...face.slice(469, 472), // Iris derecho
-        ...face.slice(474, 477)  // Iris izquierda
+      ojo_derecho = [
+        face[33], face[7], face[163], face[144], face[145],
+        face[153], face[154], face[155], face[133], face[246],
+        face[161], face[160], face[159], face[158], face[157],
+        face[173]
       ];
-      temples = [
-        face[162], face[21], face[71], face[156], face[143], face[34],// Sien derecha
-        face[389], face[251], face[301], face[383], face[372], face[264] // Sien izqierda
+      iris_izquierdo = [
+        ...face.slice(474, 477)
       ];
-      nariz = [
-        face[6], face[197], face[195], face[5], face[4], face[2],//eje del tabique
-        face[102], face[115], face[220], face[45], face[275],
-        face[440], face[344], face[331],// eje transversal de la nariz
-        face[98], face[97], face[326], face[327], face[129],
-        face[142], face[126], face[217], face [114], face[188],
-        face[122], face[351], face[412], face[343], face[437],
-        face[355], face[371], face[358]
+      iris_derecho = [
+        ...face.slice(469, 472)
+      ]
+      nariz_izquierda = [
+        face[6], face[197], face[195], face[5], face[4],//eje del tabique
+        face[102], face[115], face[220], face[45],// eje transversal de la nariz
+        face[122], face[188], face[114], face[217], face[126],
+        face[142], face[129]
+      ];
+      nariz_derecha = [
+        face[6], face[197], face[195], face[5], face[4],//eje del tabique
+        face[275], face[440], face[344], face[331],// eje transversal de la nariz
+        face[358], face[371], face[355], face[437], face[343],
+        face[412], face[351]
+      ];
+      nariz_baja = [
+        face[102], face[115], face[220], face[45],// eje transversal de la nariz
+        face[275], face[440], face[344], face[331],// eje transversal de la nariz
+        face[129], face[98], face[97], face[2], face[326], face[327], face[358]// base de la nariz
+      ];
+      mejilla_izquierda = [
+        face[376], face[411], face[427], face[434], face[364],
+        face[367], face[435], face[401]
+      ];
+      mejilla_derecha = [
+        face[147], face[187], face[207], face[214], face[135],
+        face[138], face[215], face[177]
       ];
       boca = [
         face[61], face[146], face[91], face[181], face[84],
@@ -396,12 +443,6 @@ async function predictFrame() {
         face[11], face[72], face[73], face[74], face[184],
         face[76], face[77], face[90], face[180], face[85]
       ];
-      mejillas = [
-        face[147], face[187], face[207], face[214], face[135],
-        face[138], face[215], face[177], // Mejilla derecha
-        face[376], face[411], face[427], face[434], face[364],
-        face[367], face[435], face[401] //Meji;lla izquierda
-      ];
       menton = [
         face[32], face[194], face[83], face[18], face[313],
         face[418], face[262], face[369], face[377], face[152],
@@ -412,20 +453,34 @@ async function predictFrame() {
       drawConnections(face, FOREHEAD_CONNECTIONS);
       drawLandmarks(ceja_izquierda, "green");
       drawConnections(face, LEFT_EYEBROW_CONNECTIONS);
-      drawLandmarks(ojos, "green");
-      drawConnections(face, EYES_CONNECTIONS);
-      drawLandmarks(temples, "green");
-      drawConnections(face, TEMPLES_CONNECTIONS);
-      drawLandmarks(nariz, "green");
-      drawConnections(face, NOSE_CONNECTIONS);
+      drawLandmarks(ceja_derecha, "green");
+      drawConnections(face, RIGHT_EYEBROW_CONNECTIONS);
+      drawLandmarks(sien_izquierda, "green");
+      drawConnections(face, LEFT_TEMPLE_CONNECTIONS);
+      drawLandmarks(sien_derecha, "green");
+      drawConnections(face, RIGHT_TEMPLE_CONNECTIONS);
+      drawLandmarks(ojo_izquierdo, "green");
+      drawConnections(face, LEFT_EYE_CONNECTIONS);
+      drawLandmarks(ojo_derecho, "green");
+      drawConnections(face, RIGHT_EYE_CONNECTIONS);
+      drawLandmarks(iris_izquierdo, "green");
+      drawConnections(face, LEFT_IRIS_CONNECTIONS);
+      drawLandmarks(iris_derecho, "green");
+      drawConnections(face, RIGHT_IRIS_CONNECTIONS);
+      drawLandmarks(nariz_izquierda, "green");
+      drawConnections(face, LEFT_NOSE);
+      drawLandmarks(nariz_derecha, "green");
+      drawConnections(face, RIGHT_NOSE);
+      drawLandmarks(nariz_baja, "green");
+      drawConnections(face, LOW_NOSE);
+      drawLandmarks(mejilla_izquierda, "green");
+      drawConnections(face, LEFT_CHEEK_CONNECTIONS);
+      drawLandmarks(mejilla_derecha, "green");
+      drawConnections(face, RIGHT_CHEEK_CONNECTIONS);
       drawLandmarks(boca, "green");
       drawConnections(face, LIPS_CONNECTIONS);
-      drawLandmarks(mejillas, "green");
-      drawConnections(face, CHECKS_CONNECTIONS);
       drawLandmarks(menton, "green");
       drawConnections(face, CHIN_CONNECTIONS);
-      drawLandmarks(iris, "green");
-      drawConnections(face, IRIS_CONNECTIONS);
     }
 
     // --- CONECTAR CODOS A PALMAS (heurística) ---
@@ -472,16 +527,23 @@ async function predictFrame() {
       timestamp: Date.now(),
       forehead: forehead,
       left_eyebrow: ceja_izquierda,
-      ojos: ojos,
-      iris: iris,
-      temples: temples,
-      nariz: nariz,
+      right_eyebrow: ceja_derecha,
+      sien_izquierda: sien_izquierda,
+      sien_derecha: sien_derecha,
+      ojo_izquierdo: ojo_izquierdo,
+      ojo_derecho: ojo_derecho,
+      iris_izquierdo: iris_izquierdo,
+      iris_derecho: iris_derecho,
+      nariz_izquierda: nariz_izquierda,
+      nariz_derecha: nariz_derecha,
+      nariz_baja: nariz_baja,
+      left_cheek: mejilla_izquierda,
+      right_cheek: mejilla_derecha,
       boca: boca,
-      mejillas: mejillas,
       menton: menton,
+      neck: NECK_POINTS,
       pose: cleanPose,
       hands: hands,
-      neck: NECK_POINTS,
     });
   }
 

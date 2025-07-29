@@ -1,5 +1,6 @@
 from flask import Flask, render_template, jsonify, request
 import os
+from recognizer.hand_position import analizar_posicion_manos
 
 app = Flask(__name__)
 
@@ -17,24 +18,31 @@ def list_models():
 @app.route("/api/landmarks", methods=["POST"])
 def recibir_landmarks():
     data = request.get_json()
-    print("Landmarks recibidos")
-    print("Timestamp:", data.get("timestamp"))
+    resultados = analizar_posicion_manos(data)
+    for r in resultados:
+        print(r)  # Mostramos en terminal (servidor)
     '''
     print("Frente landmarks:", data.get("forehead"))
     print("Ceja izquierda landmarks:", data.get("left_eyebrow"))
-    print("Ojos landmarks:", data.get("ojos"))
-    print("Iris landmarks:", data.get("iris"))
-    print("Sienes landmarks:", data.get("temples"))
-    print("Nariz landmarks:", data.get("nariz"))
+    print("Ceja derecha landmarks:", data.get("right_eyebrow"))
+    print("Sien izquierdo:", data.get("sien_izquierda"))
+    print("Sien derecho:", data.get("sien_derecha"))
+    print("Ojo izquierdo landmarks:", data.get("ojo_izquierdo"))
+    print("Ojo derecho landmarks:", data.get("ojo_derecho"))
+    print("Iris izquierdo:", data.get("iris_izquierdo"))
+    print("Iris derecho:", data.get("iris_derecho"))
+    print("Nariz izquierda:", data.get("nariz_izquierda"))
+    print("Nariz derecha:", data.get("nariz_derecha"))
+    print("Nariz baja:", data.get("nariz_baja"))
+    print("Mejilla izquierda:", data.get("left_cheek"))
+    print("Mejilla derecha:", data.get("right_cheek"))
     print("Boca landmarks:", data.get("boca"))
-    print("Mejillas landmarks:", data.get("mejillas"))
     print("Mentón landmarks:", data.get("menton"))
+    print("Cuello landmarks:", data.get("neck"))
     print("Pose landmarks:", data.get("pose"))
     print("Manos landmarks:", data.get("hands"))
-    print("Cuello landmarks:", data.get("neck"))
     '''
-    print("-" * 40)
-    return jsonify({"status": "ok"})
+    return jsonify({"status": "ok", "resultados": resultados})
 
 if __name__ == "__main__":
     app.run(debug=True)

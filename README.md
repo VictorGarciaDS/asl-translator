@@ -21,13 +21,13 @@ Este proyecto captura **landmarks faciales, de pose y de manos** en tiempo real 
 
 ### Mapa completo de la malla facial (468 puntos)
 
-![Facial Landmark Map](mesh_map.jpg)
+![Facial Landmark Map](assets/mesh_map.jpg)
 
 ---
 
 ### Mapa simplificado (índices clave para ASL)
 
-![Simplified Landmark Map](aGdBV.jpg)
+![Simplified Landmark Map](assets/aGdBV.jpg)
 
 ---
 
