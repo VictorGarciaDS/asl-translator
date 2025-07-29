@@ -26,14 +26,15 @@ def analizar_posicion_manos(data):
 
     # Procesamos cada mano (izquierda/derecha)
     for mano in hands_landmarks:
-        puntos = mano.get("landmarks", [])
-        if len(puntos) == 0:
+        # mano debe ser una lista de landmarks (diccionarios con x, y, z)
+        if not isinstance(mano, list) or len(mano) == 0:
             continue
 
-        # Tomamos la palma (landmark 0) como referencia de la mano
-        y_mano = puntos[0]['y']
+        try:
+            y_mano = mano[0]['y']
+        except (IndexError, TypeError, KeyError):
+            continue
 
-        # MediaPipe usa coordenadas normalizadas (0-1) y (0,0) es la esquina superior izquierda
         if y_mano < cabeza_y:
             resultados.append("🖐 Mano arriba de la cabeza")
         else:
