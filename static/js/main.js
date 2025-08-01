@@ -1,4 +1,5 @@
 import * as conns from "./connections.js";
+import { setupCamera } from "./camera.js";
 
 import {
   FilesetResolver,
@@ -72,16 +73,6 @@ function drawConnections(landmarks, connections) {
       ctx.stroke();
     }
   }
-}
-
-// --- CONFIGURACIÓN DE LA CÁMARA ---
-async function setupCamera() {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-  video.srcObject = stream;
-  await new Promise(resolve => {
-    video.onloadedmetadata = () => resolve();
-  });
-  await video.play();
 }
 
 // --- CARGA DE MODELOS DE MEDIAPIPE ---
@@ -464,7 +455,7 @@ async function predictFrame() {
 // --- INICIAR TODO ---
 (async () => {
   try {
-    await setupCamera();
+    await setupCamera(video);
     await loadModels();
     predictFrame();
   } catch (err) {
