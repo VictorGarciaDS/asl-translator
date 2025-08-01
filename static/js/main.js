@@ -1,5 +1,6 @@
 import * as conns from "./connections.js";
 import { setupCamera } from "./camera.js";
+import { drawLandmarks, drawConnections } from "./drawing.js";
 
 import {
   FilesetResolver,
@@ -46,34 +47,6 @@ let menton = [];
 let NECK_POINTS = [];
 let ignoredPosePoints = new Set([]);
 let cleanPose = [];
-
-// --- FUNCIONES DE DIBUJO ---
-function drawLandmarks(landmarks, color) {
-  if (!landmarks) return;
-  ctx.fillStyle = color;
-  for (const landmark of landmarks) {
-    if (!landmark) continue;
-    ctx.beginPath();
-    ctx.arc(landmark.x * canvas.width, landmark.y * canvas.height, 3, 0, 2 * Math.PI);
-    ctx.fill();
-  }
-}
-
-function drawConnections(landmarks, connections) {
-  if (!landmarks) return;
-  ctx.strokeStyle = "white";
-  ctx.lineWidth = 2;
-  for (const [startIdx, endIdx] of connections) {
-    const start = landmarks[startIdx];
-    const end = landmarks[endIdx];
-    if (start && end) {
-      ctx.beginPath();
-      ctx.moveTo(start.x * canvas.width, start.y * canvas.height);
-      ctx.lineTo(end.x * canvas.width, end.y * canvas.height);
-      ctx.stroke();
-    }
-  }
-}
 
 // --- CARGA DE MODELOS DE MEDIAPIPE ---
 async function loadModels() {
@@ -216,6 +189,7 @@ async function predictFrame() {
       };
 
       drawLandmarks(
+        ctx,
         [traquea2_izq,
           traquea2_der,
           traquea1_izq,
@@ -245,7 +219,7 @@ async function predictFrame() {
       ];
 
       // Dibuja
-      drawConnections(NECK_POINTS, NECK_CONNECTIONS);
+      drawConnections(ctx, NECK_POINTS, NECK_CONNECTIONS);
     }
 
     // --- FILTRAR LANDMARKS DE LA POSE ---
@@ -258,13 +232,13 @@ async function predictFrame() {
     );
 
     // --- DIBUJAR POSE ---
-    drawConnections(cleanPose, conns.POSE_CONNECTIONS);
-    drawLandmarks(cleanPose, "blue");
+    drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
+    drawLandmarks(ctx, cleanPose, "blue")
 
     // --- DIBUJAR MANOS ---
     for (const hand of hands) {
-      drawConnections(hand, conns.HAND_CONNECTIONS);
-      drawLandmarks(hand, "red");
+      drawConnections(ctx, hand, conns.HAND_CONNECTIONS);
+      drawLandmarks(ctx, hand, "red")
     }
 
     // --- LANDMARKS FACIALES (REGIONES) ---
@@ -350,38 +324,38 @@ async function predictFrame() {
         face[148], face[140]
       ];
 
-      drawLandmarks(forehead, "green");
-      drawConnections(face, conns.FOREHEAD_CONNECTIONS);
-      drawLandmarks(ceja_izquierda, "green");
-      drawConnections(face, conns.LEFT_EYEBROW_CONNECTIONS);
-      drawLandmarks(ceja_derecha, "green");
-      drawConnections(face, conns.RIGHT_EYEBROW_CONNECTIONS);
-      drawLandmarks(sien_izquierda, "green");
-      drawConnections(face, conns.LEFT_TEMPLE_CONNECTIONS);
-      drawLandmarks(sien_derecha, "green");
-      drawConnections(face, conns.RIGHT_TEMPLE_CONNECTIONS);
-      drawLandmarks(ojo_izquierdo, "green");
-      drawConnections(face, conns.LEFT_EYE_CONNECTIONS);
-      drawLandmarks(ojo_derecho, "green");
-      drawConnections(face, conns.RIGHT_EYE_CONNECTIONS);
-      drawLandmarks(iris_izquierdo, "green");
-      drawConnections(face, conns.LEFT_IRIS_CONNECTIONS);
-      drawLandmarks(iris_derecho, "green");
-      drawConnections(face, conns.RIGHT_IRIS_CONNECTIONS);
-      drawLandmarks(nariz_izquierda, "green");
-      drawConnections(face, conns.LEFT_NOSE);
-      drawLandmarks(nariz_derecha, "green");
-      drawConnections(face, conns.RIGHT_NOSE);
-      drawLandmarks(nariz_baja, "green");
-      drawConnections(face, conns.LOW_NOSE);
-      drawLandmarks(mejilla_izquierda, "green");
-      drawConnections(face, conns.LEFT_CHEEK_CONNECTIONS);
-      drawLandmarks(mejilla_derecha, "green");
-      drawConnections(face, conns.RIGHT_CHEEK_CONNECTIONS);
-      drawLandmarks(boca, "green");
-      drawConnections(face, conns.LIPS_CONNECTIONS);
-      drawLandmarks(menton, "green");
-      drawConnections(face, conns.CHIN_CONNECTIONS);
+      drawLandmarks(ctx, forehead, "green");
+      drawConnections(ctx, face, conns.FOREHEAD_CONNECTIONS);
+      drawLandmarks(ctx, ceja_izquierda, "green");
+      drawConnections(ctx, face, conns.LEFT_EYEBROW_CONNECTIONS);
+      drawLandmarks(ctx, ceja_derecha, "green");
+      drawConnections(ctx, face, conns.RIGHT_EYEBROW_CONNECTIONS);
+      drawLandmarks(ctx, sien_izquierda, "green");
+      drawConnections(ctx, face, conns.LEFT_TEMPLE_CONNECTIONS);
+      drawLandmarks(ctx, sien_derecha, "green");
+      drawConnections(ctx, face, conns.RIGHT_TEMPLE_CONNECTIONS);
+      drawLandmarks(ctx, ojo_izquierdo, "green");
+      drawConnections(ctx, face, conns.LEFT_EYE_CONNECTIONS);
+      drawLandmarks(ctx, ojo_derecho, "green");
+      drawConnections(ctx, face, conns.RIGHT_EYE_CONNECTIONS);
+      drawLandmarks(ctx, iris_izquierdo, "green");
+      drawConnections(ctx, face, conns.LEFT_IRIS_CONNECTIONS);
+      drawLandmarks(ctx, iris_derecho, "green");
+      drawConnections(ctx, face, conns.RIGHT_IRIS_CONNECTIONS);
+      drawLandmarks(ctx, nariz_izquierda, "green");
+      drawConnections(ctx, face, conns.LEFT_NOSE);
+      drawLandmarks(ctx, nariz_derecha, "green");
+      drawConnections(ctx, face, conns.RIGHT_NOSE);
+      drawLandmarks(ctx, nariz_baja, "green");
+      drawConnections(ctx, face, conns.LOW_NOSE);
+      drawLandmarks(ctx, mejilla_izquierda, "green");
+      drawConnections(ctx, face, conns.LEFT_CHEEK_CONNECTIONS);
+      drawLandmarks(ctx, mejilla_derecha, "green");
+      drawConnections(ctx, face, conns.RIGHT_CHEEK_CONNECTIONS);
+      drawLandmarks(ctx, boca, "green");
+      drawConnections(ctx, face, conns.LIPS_CONNECTIONS);
+      drawLandmarks(ctx, menton, "green");
+      drawConnections(ctx, face, conns.CHIN_CONNECTIONS);
     }
 
     // --- CONECTAR CODOS A PALMAS (heurística) ---
