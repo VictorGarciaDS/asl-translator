@@ -87,7 +87,13 @@ function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS 
   drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
   drawLandmarks(ctx, cleanPose, "blue")
 
-  allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
+  if (NECK_POINTS.length > 0) {
+    drawConnections(ctx, NECK_POINTS, [
+      [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]
+    ]);
+    drawLandmarks(ctx, NECK_POINTS, "blue");
+    allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
+  }
 
   try {
     // --- LANDMARKS FACIALES (REGIONES) ---
