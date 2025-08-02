@@ -78,14 +78,15 @@ async function predictFrame() {
   drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
   drawLandmarks(ctx, cleanPose, "blue")
 
+  // 🧠 Cuello (calculado a partir de cara y cuerpo)
+  if (poseLandmarks.length > 0 && faceResult.faceLandmarks.length > 0) {
+    NECK_POINTS = calcularNeckPoints(ctx, poseLandmarks, faceResult.faceLandmarks[0]);
+    allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
+  }
+
+
   // hasta esta linea funciona bien
   try {
-    // --- PUNTOS DE LA TRÁQUEA (entre mentón y cuello) ---
-//    if (poseResult?.landmarks?.length > 0 && faceResult?.faceLandmarks?.length > 0) {
-  //    NECK_POINTS = calcularNeckPoints(ctx, poseResult.landmarks, faceResult.faceLandmarks[0]);
-    //  allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
-    //}
-
     // --- LANDMARKS FACIALES (REGIONES) ---
     for (const face of faceResult.faceLandmarks || []) {
       forehead = [
@@ -264,7 +265,6 @@ async function predictFrame() {
 
   requestAnimationFrame(predictFrame);
 }
-
 
 // --- INICIAR TODO ---
 (async () => {
