@@ -87,6 +87,7 @@ function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS 
   drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
   drawLandmarks(ctx, cleanPose, "blue")
 
+  // 🧠 Cuello 
   if (NECK_POINTS.length > 0) {
     drawConnections(ctx, NECK_POINTS, [
       [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]
@@ -239,8 +240,7 @@ function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS 
     console.error("Error en inferencia:", err.message);
   }
 
-  frameCounter++;
-  if (frameCounter % FRAMES_PARA_ENVIAR === 0) {
+  if (++frameCounter >= FRAMES_PARA_ENVIAR) {
     const faceLandmarks = faceResult.faceLandmarks?.[0] || null;
 
     cleanPose = poseLandmarks
@@ -270,6 +270,7 @@ function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS 
       pose: cleanPose,
       hands: hands,
     });
+    frameCounter = 0;
   }
 }
 
