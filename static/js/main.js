@@ -65,26 +65,26 @@ async function predictFrame() {
   }
 
   // 🕺 Cuerpo
+  const poseLandmarks = poseResult.landmarks?.[0] || [];
+  ignoredPosePoints = new Set([
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
+    15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
+  ]);
+  // --- FILTRAR LANDMARKS DE LA POSE ---
+  cleanPose = poseLandmarks.map((p, i) =>
+    (ignoredPosePoints.has(i) || i > 24) ? null : p
+  );
+
   drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
   drawLandmarks(ctx, cleanPose, "blue")
 
   // hasta esta linea funciona bien
-  const poseLandmarks = poseResult.landmarks?.[0] || [];
   try {
     // --- PUNTOS DE LA TRÁQUEA (entre mentón y cuello) ---
 //    if (poseResult?.landmarks?.length > 0 && faceResult?.faceLandmarks?.length > 0) {
   //    NECK_POINTS = calcularNeckPoints(ctx, poseResult.landmarks, faceResult.faceLandmarks[0]);
     //  allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
     //}
-
-    // --- FILTRAR LANDMARKS DE LA POSE ---
-    const ignoredPosePoints = new Set([
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
-      15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
-    ]);
-    cleanPose = poseLandmarks.map((p, i) =>
-      (ignoredPosePoints.has(i) || i > 24) ? null : p
-    );
 
     // --- LANDMARKS FACIALES (REGIONES) ---
     for (const face of faceResult.faceLandmarks || []) {
@@ -232,11 +232,6 @@ async function predictFrame() {
   frameCounter++;
   if (frameCounter % FRAMES_PARA_ENVIAR === 0) {
     const faceLandmarks = faceResult.faceLandmarks?.[0] || null;
-
-    ignoredPosePoints = new Set([
-      0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
-      15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
-    ]);
 
     cleanPose = poseLandmarks
       .map((p, i) => ({ index: i, point: p })) // mantener índice original por si lo necesitas
