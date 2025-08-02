@@ -1,6 +1,7 @@
 import { setupCamera } from "./camera.js";
 import { loadModels } from "./models.js";
 import { drawLandmarks, drawConnections } from "./drawing.js";
+import { resizeCanvas, enviarLandmarksAlServidor } from "./utils.js";
 import * as conns from "./connections.js";
 import { calcularNeckPoints } from "./neckPoints.js";
 
@@ -8,20 +9,15 @@ const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 
-// Ajusta tamaño al inicializar
-function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resizeCanvas();
+window.addEventListener("resize", () => resizeCanvas(canvas));
+resizeCanvas(canvas);
 
 let frameCounter = 0;
 const FRAMES_PARA_ENVIAR = 10; // Envía cada 10 frames
+let handLandmarker, faceLandmarker, poseLandmarker;
 
 // Opcional: vuelve a ajustar si el usuario gira la pantalla o cambia tamaño
 window.addEventListener("resize", resizeCanvas);
-
-let handLandmarker, faceLandmarker, poseLandmarker;
 
 let forehead = [];
 let ceja_izquierda = [];
@@ -43,17 +39,6 @@ let NECK_POINTS = [];
 let ignoredPosePoints = new Set([]);
 let cleanPose = [];
 
-// --- función para enviar los datos ---
-function enviarLandmarksAlServidor(data) {
-  fetch("/api/landmarks", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  }).catch((err) => console.error("❌ Error al enviar landmarks:", err));
-}
-
 // --- LOOP PRINCIPAL DE PREDICCIÓN ---
 async function predictFrame() {
   if (!handLandmarker || !faceLandmarker || !poseLandmarker) return;
@@ -66,24 +51,17 @@ async function predictFrame() {
     poseLandmarker.detectForVideo(video, timestamp)
   ]);
 
+  // 🖼️ Dibujar primero el video
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
   let allLandmarks = [];
 
   // 🖐️ Manos
-  if (handsResult?.handedness?.length > 0 && handsResult?.landmarks?.length > 0) {
-    handsResult.handedness.forEach((hand, i) => {
-      const landmarks = handsResult.landmarks[i];
-      drawLandmarks(ctx, landmarks, "red");
-      drawConnections(ctx, landmarks, conns.HAND_CONNECTIONS);
-      allLandmarks.push({ tipo: "mano", lado: hand[0].categoryName, landmarks });
-    });
-  }
+  const hands = handsResult?.landmarks || [];
+  
   // hasta esta linea funciona bien
-  ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
   const poseLandmarks = poseResult.landmarks?.[0] || [];
-  const hands = handsResult.landmarks || [];//Creo que hay que esto esta duplicado para el paso de unir los codos
-
   try {
     // --- PUNTOS DE LA TRÁQUEA (entre mentón y cuello) ---
 //    if (poseResult?.landmarks?.length > 0 && faceResult?.faceLandmarks?.length > 0) {
@@ -103,6 +81,11 @@ async function predictFrame() {
     // --- DIBUJAR POSE ---
     drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
     drawLandmarks(ctx, cleanPose, "blue")
+    // --- DIBUJAR MANOS ---
+    for (const hand of hands) {
+      drawConnections(ctx, hand, conns.HAND_CONNECTIONS);
+      drawLandmarks(ctx, hand, "red");
+    }
 
     // --- LANDMARKS FACIALES (REGIONES) ---
     for (const face of faceResult.faceLandmarks || []) {
