@@ -59,7 +59,15 @@ async function predictFrame() {
 
   // 🖐️ Manos
   const hands = handsResult?.landmarks || [];
-  
+  for (const hand of hands) {
+    drawConnections(ctx, hand, conns.HAND_CONNECTIONS);
+    drawLandmarks(ctx, hand, "red");
+  }
+
+  // 🕺 Cuerpo
+  drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
+  drawLandmarks(ctx, cleanPose, "blue")
+
   // hasta esta linea funciona bien
   const poseLandmarks = poseResult.landmarks?.[0] || [];
   try {
@@ -77,15 +85,6 @@ async function predictFrame() {
     cleanPose = poseLandmarks.map((p, i) =>
       (ignoredPosePoints.has(i) || i > 24) ? null : p
     );
-
-    // --- DIBUJAR POSE ---
-    drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
-    drawLandmarks(ctx, cleanPose, "blue")
-    // --- DIBUJAR MANOS ---
-    for (const hand of hands) {
-      drawConnections(ctx, hand, conns.HAND_CONNECTIONS);
-      drawLandmarks(ctx, hand, "red");
-    }
 
     // --- LANDMARKS FACIALES (REGIONES) ---
     for (const face of faceResult.faceLandmarks || []) {
