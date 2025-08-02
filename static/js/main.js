@@ -13,8 +13,11 @@ window.addEventListener("resize", () => resizeCanvas(canvas));
 resizeCanvas(canvas);
 
 let frameCounter = 0;
-const FRAMES_PARA_ENVIAR = 10; // Envía cada 10 frames
+const FRAMES_PARA_ENVIAR = 2; // Envía cada 10 frames
 let handLandmarker, faceLandmarker, poseLandmarker;
+let NECK_POINTS = [];
+let ignoredPosePoints = new Set([]);
+let cleanPose = [];
 
 // Opcional: vuelve a ajustar si el usuario gira la pantalla o cambia tamaño
 window.addEventListener("resize", resizeCanvas);
@@ -35,46 +38,43 @@ let mejilla_izquierda = [];
 let mejilla_derecha = [];
 let boca = [];
 let menton = [];
-let NECK_POINTS = [];
-let ignoredPosePoints = new Set([]);
-let cleanPose = [];
 
 // --- LOOP PRINCIPAL DE PREDICCIÓN ---
 async function predictFrame() {
   if (!handLandmarker || !faceLandmarker || !poseLandmarker) return;
 
+  // Declarando primero las variables
   const timestamp = performance.now();
-
   const [handsResult, faceResult, poseResult] = await Promise.all([
     handLandmarker.detectForVideo(video, timestamp),
     faceLandmarker.detectForVideo(video, timestamp),
     poseLandmarker.detectForVideo(video, timestamp)
   ]);
 
+  const hands = handsResult?.landmarks || [];
+  const poseLandmarks = poseResult.landmarks?.[0] || [];
+  ignoredPosePoints = new Set([
+    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
+    15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
+  ]);
+
+  cleanPose = poseLandmarks.map((p, i) =>
+    (ignoredPosePoints.has(i) || i > 24) ? null : p
+  );
+
+  let allLandmarks = [];
+
   // 🖼️ Dibujar primero el video
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-  
-  let allLandmarks = [];
 
   // 🖐️ Manos
-  const hands = handsResult?.landmarks || [];
   for (const hand of hands) {
     drawConnections(ctx, hand, conns.HAND_CONNECTIONS);
     drawLandmarks(ctx, hand, "red");
   }
 
   // 🕺 Cuerpo
-  const poseLandmarks = poseResult.landmarks?.[0] || [];
-  ignoredPosePoints = new Set([
-    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
-    15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
-  ]);
-  // --- FILTRAR LANDMARKS DE LA POSE ---
-  cleanPose = poseLandmarks.map((p, i) =>
-    (ignoredPosePoints.has(i) || i > 24) ? null : p
-  );
-
   drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
   drawLandmarks(ctx, cleanPose, "blue")
 
@@ -84,8 +84,6 @@ async function predictFrame() {
     allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
   }
 
-
-  // hasta esta linea funciona bien
   try {
     // --- LANDMARKS FACIALES (REGIONES) ---
     for (const face of faceResult.faceLandmarks || []) {
