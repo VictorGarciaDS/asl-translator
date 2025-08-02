@@ -67,11 +67,22 @@ async function predictFrame() {
   ]);
 
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  let allLandmarks = [];
+
+  // 🖐️ Manos
+  if (handsResult?.handedness?.length > 0 && handsResult?.landmarks?.length > 0) {
+    handsResult.handedness.forEach((hand, i) => {
+      const landmarks = handsResult.landmarks[i];
+      drawLandmarks(ctx, landmarks, "red");
+      drawConnections(ctx, landmarks, conns.HAND_CONNECTIONS);
+      allLandmarks.push({ tipo: "mano", lado: hand[0].categoryName, landmarks });
+    });
+  }
   // hasta esta linea funciona bien
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
   const poseLandmarks = poseResult.landmarks?.[0] || [];
-  const hands = handsResult.landmarks || [];
+  const hands = handsResult.landmarks || [];//Creo que hay que esto esta duplicado para el paso de unir los codos
 
   try {
     // --- PUNTOS DE LA TRÁQUEA (entre mentón y cuello) ---
@@ -92,12 +103,6 @@ async function predictFrame() {
     // --- DIBUJAR POSE ---
     drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
     drawLandmarks(ctx, cleanPose, "blue")
-
-    // --- DIBUJAR MANOS ---
-    for (const hand of hands) {
-      drawConnections(ctx, hand, conns.HAND_CONNECTIONS);
-      drawLandmarks(ctx, hand, "red")
-    }
 
     // --- LANDMARKS FACIALES (REGIONES) ---
     for (const face of faceResult.faceLandmarks || []) {
