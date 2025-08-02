@@ -40,10 +40,10 @@ let boca = [];
 let menton = [];
 let allLandmarks = [];
 
-// --- LOOP PRINCIPAL DE PREDICCIÓN ---
-async function predictFrame() {
-  if (!handLandmarker || !faceLandmarker || !poseLandmarker) return;
-
+/**
+ * Procesa un frame y devuelve todos los landmarks detectados
+ */
+async function processFrame(video) {
   // Declarando primero las variables
   const timestamp = performance.now();
   const [handsResult, faceResult, poseResult] = await Promise.all([
@@ -67,9 +67,12 @@ async function predictFrame() {
   // 🧠 Cuello (calculado a partir de cara y cuerpo)
   if (poseLandmarks.length > 0 && faceResult.faceLandmarks.length > 0) {
     NECK_POINTS = calcularNeckPoints(ctx, poseLandmarks, faceResult.faceLandmarks[0]);
-    allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
   }
 
+  return { hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS };
+}
+
+function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS }) {
   // 🖼️ Dibujar primero el video
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -83,6 +86,8 @@ async function predictFrame() {
   // 🕺 Cuerpo
   drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
   drawLandmarks(ctx, cleanPose, "blue")
+
+  allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
 
   try {
     // --- LANDMARKS FACIALES (REGIONES) ---
@@ -260,6 +265,14 @@ async function predictFrame() {
       hands: hands,
     });
   }
+}
+
+// --- LOOP PRINCIPAL DE PREDICCIÓN ---
+async function predictFrame() {
+  if (!handLandmarker || !faceLandmarker || !poseLandmarker) return;
+
+  const results = await processFrame(video);
+  renderFrame(results);
 
   requestAnimationFrame(predictFrame);
 }
