@@ -56,16 +56,22 @@ function enviarLandmarksAlServidor(data) {
 
 // --- LOOP PRINCIPAL DE PREDICCIÓN ---
 async function predictFrame() {
+  if (!handLandmarker || !faceLandmarker || !poseLandmarker) return;
+
+  const timestamp = performance.now();
+
+  const [handsResult, faceResult, poseResult] = await Promise.all([
+    handLandmarker.detectForVideo(video, timestamp),
+    faceLandmarker.detectForVideo(video, timestamp),
+    poseLandmarker.detectForVideo(video, timestamp)
+  ]);
+
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  // hasta esta linea funciona bien
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
-  const now = performance.now();
-  const handResult = await handLandmarker.detectForVideo(video, now);
-  const faceResult = await faceLandmarker.detectForVideo(video, now);
-  const poseResult = await poseLandmarker.detectForVideo(video, now);
-
   const poseLandmarks = poseResult.landmarks?.[0] || [];
-  const hands = handResult.landmarks || [];
+  const hands = handsResult.landmarks || [];
 
   try {
     // --- PUNTOS DE LA TRÁQUEA (entre mentón y cuello) ---
