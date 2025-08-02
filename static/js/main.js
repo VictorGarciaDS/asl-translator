@@ -38,6 +38,7 @@ let mejilla_izquierda = [];
 let mejilla_derecha = [];
 let boca = [];
 let menton = [];
+let allLandmarks = [];
 
 // --- LOOP PRINCIPAL DE PREDICCIÓN ---
 async function predictFrame() {
@@ -53,6 +54,7 @@ async function predictFrame() {
 
   const hands = handsResult?.landmarks || [];
   const poseLandmarks = poseResult.landmarks?.[0] || [];
+
   ignoredPosePoints = new Set([
     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,     // cara
     15, 16, 17, 18, 19, 20, 21, 22        // muñecas, dedos
@@ -62,7 +64,11 @@ async function predictFrame() {
     (ignoredPosePoints.has(i) || i > 24) ? null : p
   );
 
-  let allLandmarks = [];
+  // 🧠 Cuello (calculado a partir de cara y cuerpo)
+  if (poseLandmarks.length > 0 && faceResult.faceLandmarks.length > 0) {
+    NECK_POINTS = calcularNeckPoints(ctx, poseLandmarks, faceResult.faceLandmarks[0]);
+    allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
+  }
 
   // 🖼️ Dibujar primero el video
   ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -77,12 +83,6 @@ async function predictFrame() {
   // 🕺 Cuerpo
   drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
   drawLandmarks(ctx, cleanPose, "blue")
-
-  // 🧠 Cuello (calculado a partir de cara y cuerpo)
-  if (poseLandmarks.length > 0 && faceResult.faceLandmarks.length > 0) {
-    NECK_POINTS = calcularNeckPoints(ctx, poseLandmarks, faceResult.faceLandmarks[0]);
-    allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
-  }
 
   try {
     // --- LANDMARKS FACIALES (REGIONES) ---
