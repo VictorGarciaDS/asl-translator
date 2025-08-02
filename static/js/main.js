@@ -1,13 +1,7 @@
-import * as conns from "./connections.js";
 import { setupCamera } from "./camera.js";
+import { loadModels } from "./models.js";
 import { drawLandmarks, drawConnections } from "./drawing.js";
-
-import {
-  FilesetResolver,
-  HandLandmarker,
-  FaceLandmarker,
-  PoseLandmarker,
-} from "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3";
+import * as conns from "./connections.js";
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
@@ -47,30 +41,6 @@ let menton = [];
 let NECK_POINTS = [];
 let ignoredPosePoints = new Set([]);
 let cleanPose = [];
-
-// --- CARGA DE MODELOS DE MEDIAPIPE ---
-async function loadModels() {
-  const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
-  );
-
-  handLandmarker = await HandLandmarker.createFromOptions(vision, {
-    baseOptions: { modelAssetPath: "/static/models/hand_landmarker.task" },
-    runningMode: "VIDEO",
-    numHands: 2,
-  });
-
-  faceLandmarker = await FaceLandmarker.createFromOptions(vision, {
-    baseOptions: { modelAssetPath: "/static/models/face_landmarker.task" },
-    outputFaceBlendshapes: false,
-    runningMode: "VIDEO",
-  });
-
-  poseLandmarker = await PoseLandmarker.createFromOptions(vision, {
-    baseOptions: { modelAssetPath: "/static/models/pose_landmarker_lite.task" },
-    runningMode: "VIDEO",
-  });
-}
 
 // --- función para enviar los datos ---
 function enviarLandmarksAlServidor(data) {
@@ -430,7 +400,17 @@ async function predictFrame() {
 (async () => {
   try {
     await setupCamera(video);
-    await loadModels();
+    const models = await loadModels();
+
+    handLandmarker = models.handLandmarker;
+    faceLandmarker = models.faceLandmarker;
+    poseLandmarker = models.poseLandmarker;
+
+    // ✅ Muy importante para evitar errores como "Task not initialized with image mode"
+    await handLandmarker.setOptions({ runningMode: "VIDEO" });
+    await faceLandmarker.setOptions({ runningMode: "VIDEO" });
+    await poseLandmarker.setOptions({ runningMode: "VIDEO" });
+
     predictFrame();
   } catch (err) {
     console.error("Error al iniciar:", err);
