@@ -214,6 +214,28 @@ function drawFacialRegions(ctx, face, regions) {
   }
 }
 
+function drawArmToPalmConnections(ctx, hands, poseLandmarks, canvas) {
+  const codoIzq = poseLandmarks[13];
+  const codoDer = poseLandmarks[14];
+  for (const hand of hands) {
+    const palma = hand[0];
+    if (codoIzq && codoDer && palma) {
+      const distIzq = Math.hypot(palma.x - codoIzq.x, palma.y - codoIzq.y);
+      const distDer = Math.hypot(palma.x - codoDer.x, palma.y - codoDer.y);
+      const cercaIzq = distIzq < distDer;
+
+      ctx.strokeStyle = "white";
+      ctx.beginPath();
+      ctx.moveTo(
+        (cercaIzq ? codoIzq.x : codoDer.x) * canvas.width,
+        (cercaIzq ? codoIzq.y : codoDer.y) * canvas.height
+      );
+      ctx.lineTo(palma.x * canvas.width, palma.y * canvas.height);
+      ctx.stroke();
+    }
+  }
+}
+
 function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS }) {
   drawVideoFrame(ctx, canvas, video)
   drawHands(ctx, hands);
@@ -226,29 +248,7 @@ function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS 
       const regions = extractFacialRegions(face);
       drawFacialRegions(ctx, face, regions);
     }
-
-    // --- CONECTAR CODOS A PALMAS (heurística) ---
-    const codoIzq = poseLandmarks[13];
-    const codoDer = poseLandmarks[14];
-
-    for (const hand of hands) {
-      const palma = hand[0];
-      if (codoIzq && codoDer && palma) {
-        const distIzq = Math.hypot(palma.x - codoIzq.x, palma.y - codoIzq.y);
-        const distDer = Math.hypot(palma.x - codoDer.x, palma.y - codoDer.y);
-        const cercaIzq = distIzq < distDer;
-
-        ctx.strokeStyle = "white";
-        ctx.beginPath();
-        ctx.moveTo(
-          (cercaIzq ? codoIzq.x : codoDer.x) * canvas.width,
-          (cercaIzq ? codoIzq.y : codoDer.y) * canvas.height
-        );
-        ctx.lineTo(palma.x * canvas.width, palma.y * canvas.height);
-        ctx.stroke();
-      }
-    }
-
+    drawArmToPalmConnections(ctx, hands, poseLandmarks, canvas);
   } catch (err) {
     console.error("Error en inferencia:", err.message);
   }
