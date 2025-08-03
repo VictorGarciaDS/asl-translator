@@ -92,12 +92,8 @@ function drawPose(ctx, cleanPose) {
   drawLandmarks(ctx, cleanPose, "blue");
 }
 
-function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS }) {
-  drawVideoFrame(ctx, canvas, video)
-  drawHands(ctx, hands);
-  drawPose(ctx, cleanPose);
-
-  // 🧠 Cuello 
+// 🧠 Cuello
+function drawNeck(ctx, NECK_POINTS, allLandmarks) {
   if (NECK_POINTS.length > 0) {
     drawConnections(ctx, NECK_POINTS, [
       [0,1],[1,2],[2,3],[3,4],[4,5],[5,6],[6,7]
@@ -105,6 +101,13 @@ function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS 
     drawLandmarks(ctx, NECK_POINTS, "blue");
     allLandmarks.push({ tipo: "cuello", landmarks: NECK_POINTS });
   }
+}
+
+function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS }) {
+  drawVideoFrame(ctx, canvas, video)
+  drawHands(ctx, hands);
+  drawPose(ctx, cleanPose);
+  drawNeck(ctx, NECK_POINTS, allLandmarks);
 
   try {
     // --- LANDMARKS FACIALES (REGIONES) ---
