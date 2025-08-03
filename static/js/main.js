@@ -78,18 +78,24 @@ function drawVideoFrame(ctx, canvas, video) {
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 }
 
-function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS }) {
-  drawVideoFrame(ctx, canvas, video)
-
-  // 🖐️ Manos
+// 🖐️ Manos
+function drawHands(ctx, hands) {
   for (const hand of hands) {
     drawConnections(ctx, hand, conns.HAND_CONNECTIONS);
     drawLandmarks(ctx, hand, "red");
   }
+}
 
-  // 🕺 Cuerpo
+// 🕺 Cuerpo
+function drawPose(ctx, cleanPose) {
   drawConnections(ctx, cleanPose, conns.POSE_CONNECTIONS);
-  drawLandmarks(ctx, cleanPose, "blue")
+  drawLandmarks(ctx, cleanPose, "blue");
+}
+
+function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS }) {
+  drawVideoFrame(ctx, canvas, video)
+  drawHands(ctx, hands);
+  drawPose(ctx, cleanPose);
 
   // 🧠 Cuello 
   if (NECK_POINTS.length > 0) {
