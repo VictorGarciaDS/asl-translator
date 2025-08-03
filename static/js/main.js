@@ -72,10 +72,14 @@ async function processFrame(video) {
   return { hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS };
 }
 
-function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS }) {
-  // 🖼️ Dibujar primero el video
+// 🖼️ Dibujar primero el video
+function drawVideoFrame(ctx, canvas, video) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+}
+
+function renderFrame({ hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS }) {
+  drawVideoFrame(ctx, canvas, video)
 
   // 🖐️ Manos
   for (const hand of hands) {
