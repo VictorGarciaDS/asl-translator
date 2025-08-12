@@ -12,31 +12,13 @@ window.addEventListener("resize", () => resizeCanvas(canvas));
 resizeCanvas(canvas);
 
 let frameCounter = 0;
-const FRAMES_PARA_ENVIAR = 2; // Envía cada 10 frames
+const FRAMES_PARA_ENVIAR = 1; // Envía cada FRAMES_PARA_ENVIAR (1, 2 o 10) frames
 let handLandmarker, faceLandmarker, poseLandmarker;
-let NECK_POINTS = [];
 let ignoredPosePoints = new Set([]);
-let cleanPose = [];
 
 // Opcional: vuelve a ajustar si el usuario gira la pantalla o cambia tamaño
 window.addEventListener("resize", resizeCanvas);
 
-let forehead = [];
-let ceja_izquierda = [];
-let ceja_derecha = [];
-let sien_izquierda = [];
-let sien_derecha = [];
-let ojo_izquierdo = [];
-let ojo_derecho = [];
-let iris_izquierdo = [];
-let iris_derecho = [];
-let nariz_izquierda = [];
-let nariz_derecha = [];
-let nariz_baja = [];
-let mejilla_izquierda = [];
-let mejilla_derecha = [];
-let boca = [];
-let menton = [];
 let allLandmarks = [];
 
 // --- LOOP PRINCIPAL DE PREDICCIÓN ---
@@ -44,8 +26,9 @@ async function predictFrame() {
   if (!handLandmarker || !faceLandmarker || !poseLandmarker) return;
 
   const results = await processFrame(video, ctx, { handLandmarker, faceLandmarker, poseLandmarker });
-  renderFrame(ctx, canvas, video, results, allLandmarks, frameCounter, ignoredPosePoints);
+  renderFrame(ctx, canvas, video, results, allLandmarks, frameCounter, ignoredPosePoints, FRAMES_PARA_ENVIAR);
 
+  frameCounter++;
   requestAnimationFrame(predictFrame);
 }
 

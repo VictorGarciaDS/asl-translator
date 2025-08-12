@@ -167,7 +167,7 @@ export function drawArmToPalmConnections(ctx, hands, poseLandmarks, canvas) {
   }
 }
 
-export function renderFrame(ctx, canvas, video, data, allLandmarks, frameCounter, ignoredPosePoints) {
+export function renderFrame(ctx, canvas, video, data, allLandmarks, frameCounter, ignoredPosePoints, FRAMES_PARA_ENVIAR) {
   const { hands, faceResult, poseLandmarks, cleanPose, NECK_POINTS } = data;
 
   drawVideoFrame(ctx, canvas, video);
@@ -186,36 +186,44 @@ export function renderFrame(ctx, canvas, video, data, allLandmarks, frameCounter
     console.error("Error en inferencia:", err.message);
   }
 
-  if (++frameCounter >= 2) {
+  console.log("Antes del if framecounter");
+  if (frameCounter % FRAMES_PARA_ENVIAR === 0) {
     const faceLandmarks = faceResult.faceLandmarks?.[0] || null;
 
-    cleanPose = poseLandmarks
-      .map((p, i) => ({ index: i, point: p })) // mantener índice original por si lo necesitas
-      .filter(({ index }) => !ignoredPosePoints.has(index) && index <= 24)
-      .map(({ point }) => point); // solo devolver los puntos válidos
+    console.log("Antes de cleanpose");
+    const filteredPose = poseLandmarks
+    .map((p, i) => ({ index: i, point: p }))
+    .filter(({ index }) => !ignoredPosePoints.has(index) && index <= 24)
+    .map(({ point }) => point);
 
+    console.log("Antes de enviar");
+
+    let regionsData = {};
+    if (faceLandmarks) {
+      regionsData = extractFacialRegions(faceLandmarks);
+    }
     enviarLandmarksAlServidor({
       timestamp: Date.now(),
-      forehead: forehead,
-      left_eyebrow: ceja_izquierda,
-      right_eyebrow: ceja_derecha,
-      sien_izquierda: sien_izquierda,
-      sien_derecha: sien_derecha,
-      ojo_izquierdo: ojo_izquierdo,
-      ojo_derecho: ojo_derecho,
-      iris_izquierdo: iris_izquierdo,
-      iris_derecho: iris_derecho,
-      nariz_izquierda: nariz_izquierda,
-      nariz_derecha: nariz_derecha,
-      nariz_baja: nariz_baja,
-      left_cheek: mejilla_izquierda,
-      right_cheek: mejilla_derecha,
-      boca: boca,
-      menton: menton,
+      forehead: regionsData.forehead,
+      left_eyebrow: regionsData.ceja_izquierda,
+      right_eyebrow: regionsData.ceja_derecha,
+      sien_izquierda: regionsData.sien_izquierda,
+      sien_derecha: regionsData.sien_derecha,
+      ojo_izquierdo: regionsData.ojo_izquierdo,
+      ojo_derecho: regionsData.ojo_derecho,
+      iris_izquierdo: regionsData.iris_izquierdo,
+      iris_derecho: regionsData.iris_derecho,
+      nariz_izquierda: regionsData.nariz_izquierda,
+      nariz_derecha: regionsData.nariz_derecha,
+      nariz_baja: regionsData.nariz_baja,
+      left_cheek: regionsData.mejilla_izquierda,
+      right_cheek: regionsData.mejilla_derecha,
+      boca: regionsData.boca,
+      menton: regionsData.menton,
       neck: NECK_POINTS,
-      pose: cleanPose,
+      pose: filteredPose,
       hands: hands,
     });
-    frameCounter = 0;
+    console.log("Despues de enviar");
   }
 }
