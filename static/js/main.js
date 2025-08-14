@@ -1,4 +1,4 @@
-import { setupCamera } from "./camera.js";
+import { setupCamera } from "./getVideo.js";
 import { loadModels } from "./models.js";
 import { resizeCanvas } from "./utils.js";
 import { processFrame } from "./frameProcessor.js";
