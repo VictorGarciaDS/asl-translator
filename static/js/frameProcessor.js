@@ -6,7 +6,9 @@ import { calcularNeckPoints } from "./neckPoints.js";
 
 export async function processFrame(video, ctx, landmarkers) {
     const { handLandmarker, faceLandmarker, poseLandmarker } = landmarkers;
-    const timestamp = performance.now();
+    const timestamp = video.srcObject 
+      ? performance.now()
+      : video.currentTime * 1000;
 
     const [handsResult, faceResult, poseResult] = await Promise.all([
         handLandmarker.detectForVideo(video, timestamp),
